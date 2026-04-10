@@ -1,4 +1,4 @@
-# ❤️ Heart Disease Predictor (Advanced AI System)
+# ❤️ Heart Disease Predictor (Based on ML)
 
 ## 🔗 Live App
 https://cardio-insight-ml.streamlit.app
