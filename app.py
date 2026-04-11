@@ -1,3 +1,5 @@
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 import streamlit as st
 import pickle
 import numpy as np
@@ -93,6 +95,58 @@ if st.button("Predict"):
     st.write(f"Confidence: {confidence:.2f}%")
 
     st.progress(float(risk)/100)
+    # ---------- PDF REPORT ---------- #
+st.subheader("📄 Download Report")
+
+def create_pdf():
+    doc = SimpleDocTemplate("report.pdf")
+    styles = getSampleStyleSheet()
+
+    content = []
+
+    content.append(Paragraph("Heart Disease Report", styles["Title"]))
+    content.append(Spacer(1, 10))
+
+    content.append(Paragraph(f"Risk: {risk:.2f}%", styles["Normal"]))
+    content.append(Paragraph(f"Confidence: {confidence:.2f}%", styles["Normal"]))
+    content.append(Spacer(1, 10))
+
+    content.append(Paragraph("Patient Data:", styles["Heading2"]))
+    content.append(Paragraph(f"Age: {age}", styles["Normal"]))
+    content.append(Paragraph(f"Cholesterol: {chol}", styles["Normal"]))
+    content.append(Paragraph(f"Blood Pressure: {trestbps}", styles["Normal"]))
+    content.append(Paragraph(f"Heart Rate: {thalach}", styles["Normal"]))
+    content.append(Spacer(1, 10))
+
+    if risk > 60:
+        content.append(Paragraph("⚠️ High Risk - Consult Doctor", styles["Normal"]))
+    else:
+        content.append(Paragraph("✅ Moderate/Low Risk", styles["Normal"]))
+
+    doc.build(content)
+
+create_pdf()
+
+with open("report.pdf", "rb") as f:
+    st.download_button(
+        "⬇️ Download Report",
+        f,
+        file_name="Heart_Report.pdf"
+    )
+    # ---------- RISK BREAKDOWN ---------- #
+st.subheader("📊 Risk Breakdown")
+
+risk_factors = {
+    "Cholesterol": chol / 400,
+    "Blood Pressure": trestbps / 200,
+    "Heart Rate": 1 - (thalach / 220),
+    "Oldpeak": oldpeak / 6,
+    "Blocked Vessels (ca)": ca / 3
+}
+
+risk_df = pd.DataFrame(list(risk_factors.items()), columns=["Factor", "Impact"])
+
+st.bar_chart(risk_df.set_index("Factor"))
 
     if risk < 30:
         st.success("Low Risk 🟢")
