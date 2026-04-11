@@ -144,19 +144,40 @@ if st.button("Predict"):
     else:
         st.error("High Risk 🔴")
 
-    # ---------- USER GRAPH ---------- #
-    st.subheader("📈 Your Health Data")
+    # ---------- HEALTH COMPARISON GRAPHS ---------- #
+    st.subheader("🧪 Health Comparison (Your Value vs Normal)")
 
-    input_data_dict = {
-        "Age": age,
-        "BP": trestbps,
-        "Cholesterol": chol,
-        "Max HR": thalach,
-        "Oldpeak": oldpeak
-    }
+    # Cholesterol
+    st.write("### 🩸 Cholesterol")
+    chol_df = pd.DataFrame({
+        "Type": ["Your Value", "Normal (<200)"],
+        "Value": [chol, 200]
+    })
+    st.bar_chart(chol_df.set_index("Type"))
 
-    df_input = pd.DataFrame.from_dict(input_data_dict, orient='index', columns=['Value'])
-    st.bar_chart(df_input)
+    # Blood Pressure
+    st.write("### 💓 Blood Pressure")
+    bp_df = pd.DataFrame({
+        "Type": ["Your Value", "Normal (~120)"],
+        "Value": [trestbps, 120]
+    })
+    st.bar_chart(bp_df.set_index("Type"))
+
+    # Heart Rate
+    st.write("### ❤️ Max Heart Rate")
+    hr_df = pd.DataFrame({
+        "Type": ["Your Value", "Normal (>100)"],
+        "Value": [thalach, 100]
+    })
+    st.bar_chart(hr_df.set_index("Type"))
+
+    # Oldpeak
+    st.write("### 📉 ST Depression (Oldpeak)")
+    oldpeak_df = pd.DataFrame({
+        "Type": ["Your Value", "Normal (<1)"],
+        "Value": [oldpeak, 1.0]
+    })
+    st.bar_chart(oldpeak_df.set_index("Type"))
 
     # ---------- HEALTH INSIGHTS ---------- #
     st.subheader("📋 Health Insights")
