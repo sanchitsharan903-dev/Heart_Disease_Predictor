@@ -39,6 +39,9 @@ scaler = pickle.load(open("scaler.pkl", "rb"))
 # ---------- TITLE ---------- #
 st.title("❤️ Heart Disease Predictor (AI Powered)")
 
+# ---------- PATIENT NAME ---------- #
+patient_name = st.text_input("👤 Patient Name")
+
 # ---------- INPUT ---------- #
 age = st.number_input("Age", 1, 120, 30)
 
@@ -79,6 +82,12 @@ thal = thal_labels.index(st.selectbox("Thal",thal_labels))
 # ---------- PREDICT ---------- #
 if st.button("Predict"):
 
+    if patient_name.strip() == "":
+        st.warning("Please enter patient name")
+        st.stop()
+
+    st.subheader(f"👤 Patient: {patient_name}")
+
     input_data = np.array([[age, sex, cp, trestbps, chol, fbs,
                             restecg, thalach, exang, oldpeak,
                             slope, ca, thal]])
@@ -105,28 +114,6 @@ if st.button("Predict"):
     else:
         category = "HIGH"
         st.error("High Risk 🔴")
-
-    # ---------- RISK BREAKDOWN ---------- #
-    st.subheader("📊 Risk Breakdown")
-
-    risk_factors = {
-        "Cholesterol": chol / 400,
-        "Blood Pressure": trestbps / 200,
-        "Heart Rate": 1 - (thalach / 220),
-        "Oldpeak": oldpeak / 6,
-        "Blocked Vessels": ca / 3
-    }
-
-    risk_df = pd.DataFrame(list(risk_factors.items()), columns=["Factor", "Impact"])
-    st.bar_chart(risk_df.set_index("Factor"))
-
-    # ---------- HEALTH COMPARISON ---------- #
-    st.subheader("🧪 Health Comparison")
-
-    st.bar_chart(pd.DataFrame({"Value":[chol,200]}, index=["You","Normal Chol"]))
-    st.bar_chart(pd.DataFrame({"Value":[trestbps,120]}, index=["You","Normal BP"]))
-    st.bar_chart(pd.DataFrame({"Value":[thalach,100]}, index=["You","Normal HR"]))
-    st.bar_chart(pd.DataFrame({"Value":[oldpeak,1]}, index=["You","Normal Oldpeak"]))
 
     # ---------- HEALTH SUGGESTIONS ---------- #
     st.subheader("💡 Health Suggestions")
@@ -184,18 +171,10 @@ if st.button("Predict"):
         content.append(Paragraph("Heart Disease Report", styles["Title"]))
         content.append(Spacer(1,10))
 
+        content.append(Paragraph(f"Patient Name: {patient_name}", styles["Normal"]))
         content.append(Paragraph(f"Risk: {risk:.2f}%", styles["Normal"]))
         content.append(Paragraph(f"Confidence: {confidence:.2f}%", styles["Normal"]))
         content.append(Paragraph(f"Category: {category}", styles["Normal"]))
-        content.append(Spacer(1,10))
-
-        content.append(Paragraph("Patient Data:", styles["Heading2"]))
-        content.append(Paragraph(f"Age: {age}", styles["Normal"]))
-        content.append(Paragraph(f"Sex: {'Male' if sex==1 else 'Female'}", styles["Normal"]))
-        content.append(Paragraph(f"Cholesterol: {chol}", styles["Normal"]))
-        content.append(Paragraph(f"Blood Pressure: {trestbps}", styles["Normal"]))
-        content.append(Paragraph(f"Heart Rate: {thalach}", styles["Normal"]))
-        content.append(Paragraph(f"Oldpeak: {oldpeak}", styles["Normal"]))
         content.append(Spacer(1,10))
 
         content.append(Paragraph("Health Suggestions:", styles["Heading2"]))
@@ -211,26 +190,3 @@ if st.button("Predict"):
 
     with open("report.pdf", "rb") as f:
         st.download_button("⬇️ Download Full Report", f, file_name="Heart_Report.pdf")
-
-    # ---------- HISTORY ---------- #
-    if "history" not in st.session_state:
-        st.session_state.history = []
-
-    st.session_state.history.append(round(risk,2))
-
-    st.subheader("📜 Prediction History")
-    st.write(st.session_state.history)
-
-    # ---------- FEATURE IMPORTANCE ---------- #
-    st.subheader("📊 Feature Importance")
-
-    features = ["age","sex","cp","trestbps","chol","fbs",
-                "restecg","thalach","exang","oldpeak",
-                "slope","ca","thal"]
-
-    fig, ax = plt.subplots()
-    ax.barh(features, model.feature_importances_)
-    st.pyplot(fig)
-
-    # ---------- FOOTER ---------- #
-    st.markdown("<hr><p style='text-align:center;'>Developed by <b>Sanchit Sharan</b></p>", unsafe_allow_html=True)
