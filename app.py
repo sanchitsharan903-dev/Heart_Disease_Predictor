@@ -1,5 +1,6 @@
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
+from datetime import datetime
 import streamlit as st
 import pickle
 import numpy as np
@@ -18,13 +19,12 @@ st.markdown(f"""
 <style>
 [data-testid="stAppViewContainer"] {{
     background: 
-        linear-gradient(rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.45)),
+        linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
         url("data:image/png;base64,{img_base64}");
     background-size: cover;
-    background-position: center;
 }}
 .block-container {{
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0,0,0,0.35);
     padding: 2rem;
     border-radius: 15px;
 }}
@@ -32,23 +32,22 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ---------- LOAD MODEL ---------- #
-model = pickle.load(open("model.pkl", "rb"))
-scaler = pickle.load(open("scaler.pkl", "rb"))
+model = pickle.load(open("model.pkl","rb"))
+scaler = pickle.load(open("scaler.pkl","rb"))
 
 # ---------- TITLE ---------- #
-st.title("❤️ Heart Disease Predictor (AI Powered)")
+st.title("❤️ Heart Disease Predictor(Based on Machine-Learning)")
 patient_name = st.text_input("👤 Patient Name")
 
 # ---------- INPUT ---------- #
-age = st.number_input("Age", 1, 120, 30)
-
-sex = {"Female": 0, "Male": 1}[st.selectbox("Sex", ["Female","Male"])]
+age = st.number_input("Age",1,120,30)
+sex = {"Female":0,"Male":1}[st.selectbox("Sex",["Female","Male"])]
 
 cp_labels = ["Typical Angina","Atypical Angina","Non-anginal Pain","Asymptomatic"]
-cp = cp_labels.index(st.selectbox("Chest Pain Type", cp_labels))
+cp = cp_labels.index(st.selectbox("Chest Pain Type",cp_labels))
 
-trestbps = st.number_input("Resting BP", 80, 200, 120)
-chol = st.number_input("Cholesterol", 100, 400, 200)
+trestbps = st.number_input("Resting BP",80,200,120)
+chol = st.number_input("Cholesterol",100,400,200)
 
 if chol < 200:
     st.success("Cholesterol Normal ✅")
@@ -63,7 +62,6 @@ restecg_labels = ["Normal","ST-T abnormality","LVH"]
 restecg = restecg_labels.index(st.selectbox("Rest ECG",restecg_labels))
 
 thalach = st.number_input("Max Heart Rate",60,220,150)
-
 exang = {"No":0,"Yes":1}[st.selectbox("Exercise Angina",["No","Yes"])]
 
 oldpeak = st.number_input("Oldpeak",0.0,6.0,1.0)
@@ -79,22 +77,22 @@ thal = thal_labels.index(st.selectbox("Thal",thal_labels))
 # ---------- PREDICT ---------- #
 if st.button("Predict"):
 
-    if patient_name.strip() == "":
+    if patient_name.strip()=="":
         st.warning("Please enter patient name")
         st.stop()
 
     st.subheader(f"👤 Patient: {patient_name}")
 
-    input_data = np.array([[age, sex, cp, trestbps, chol, fbs,
-                            restecg, thalach, exang, oldpeak,
-                            slope, ca, thal]])
+    input_data = np.array([[age,sex,cp,trestbps,chol,fbs,
+                            restecg,thalach,exang,oldpeak,
+                            slope,ca,thal]])
 
     input_data = scaler.transform(input_data)
 
     prob = model.predict_proba(input_data)
 
-    risk = float(prob[0][1]) * 100
-    confidence = float(max(prob[0])) * 100
+    risk = float(prob[0][1])*100
+    confidence = float(max(prob[0]))*100
 
     # ---------- RESULT ---------- #
     st.subheader(f"🧠 Risk: {risk:.2f}%")
@@ -102,121 +100,125 @@ if st.button("Predict"):
     st.progress(risk/100)
 
     if risk < 30:
-        category = "LOW"
+        category="LOW"
         st.success("Low Risk 🟢")
     elif risk < 60:
-        category = "MODERATE"
+        category="MODERATE"
         st.warning("Moderate Risk 🟡")
     else:
-        category = "HIGH"
+        category="HIGH"
         st.error("High Risk 🔴")
 
     # ---------- RISK BREAKDOWN ---------- #
     st.subheader("📊 Risk Breakdown")
 
-    risk_factors = {
-        "Cholesterol": chol / 400,
-        "Blood Pressure": trestbps / 200,
-        "Heart Rate": 1 - (thalach / 220),
-        "Oldpeak": oldpeak / 6,
-        "Blocked Vessels": ca / 3
+    risk_factors={
+        "Cholesterol":chol/400,
+        "Blood Pressure":trestbps/200,
+        "Heart Rate":1-(thalach/220),
+        "Oldpeak":oldpeak/6,
+        "Blocked Vessels":ca/3
     }
 
-    risk_df = pd.DataFrame(list(risk_factors.items()), columns=["Factor", "Impact"])
+    risk_df=pd.DataFrame(list(risk_factors.items()),columns=["Factor","Impact"])
     st.bar_chart(risk_df.set_index("Factor"))
 
     # ---------- COMPARISON GRAPHS ---------- #
     st.subheader("🧪 Health Comparison")
 
-    st.bar_chart(pd.DataFrame({"Value":[chol,200]}, index=["You","Normal Chol"]))
-    st.bar_chart(pd.DataFrame({"Value":[trestbps,120]}, index=["You","Normal BP"]))
-    st.bar_chart(pd.DataFrame({"Value":[thalach,100]}, index=["You","Normal HR"]))
-    st.bar_chart(pd.DataFrame({"Value":[oldpeak,1]}, index=["You","Normal Oldpeak"]))
+    st.bar_chart(pd.DataFrame({"Value":[chol,200]},index=["You","Normal Chol"]))
+    st.bar_chart(pd.DataFrame({"Value":[trestbps,120]},index=["You","Normal BP"]))
+    st.bar_chart(pd.DataFrame({"Value":[thalach,100]},index=["You","Normal HR"]))
+    st.bar_chart(pd.DataFrame({"Value":[oldpeak,1]},index=["You","Normal Oldpeak"]))
 
-    # ---------- HEALTH SUGGESTIONS ---------- #
+    # ---------- SUGGESTIONS ---------- #
     st.subheader("💡 Health Suggestions")
 
-    suggestions = []
+    suggestions=[]
 
-    if chol > 240:
-        st.warning("High cholesterol → reduce oily food")
-        suggestions.append("Reduce oily and fatty food")
+    if chol>240:
+        st.warning("High cholesterol")
+        suggestions.append("Reduce oily food")
 
-    if trestbps > 140:
-        st.warning("High BP → reduce salt")
-        suggestions.append("Reduce salt intake")
+    if trestbps>140:
+        st.warning("High BP")
+        suggestions.append("Reduce salt")
 
-    if thalach < 100:
-        st.warning("Low heart rate → improve fitness")
-        suggestions.append("Improve cardiovascular fitness")
+    if thalach<100:
+        suggestions.append("Improve fitness")
 
-    if oldpeak > 2:
-        st.warning("Heart stress detected")
-        suggestions.append("Possible heart stress")
+    if cp==3:
+        suggestions.append("Chest pain risk")
 
-    if cp == 3:
-        st.warning("Asymptomatic chest pain → serious risk")
-        suggestions.append("Chest pain risk detected")
+    if exang==1:
+        suggestions.append("Exercise angina")
 
-    if exang == 1:
-        st.warning("Exercise angina detected")
-        suggestions.append("Exercise-induced angina")
-
-    if ca > 1:
-        st.warning("Blocked vessels detected")
+    if ca>1:
         suggestions.append("Blocked vessels")
 
-    if thal != 0:
-        st.warning("Abnormal thal result")
-        suggestions.append("Abnormal thalassemia")
+    if thal!=0:
+        suggestions.append("Thal issue")
 
-    if risk > 60:
-        st.error("Consult cardiologist immediately 🚨")
-        suggestions.append("Consult cardiologist immediately")
+    if risk>60:
+        suggestions.append("Consult cardiologist")
 
-    if len(suggestions) == 0:
-        st.success("All parameters look good ✅")
+    if len(suggestions)==0:
         suggestions.append("All parameters normal")
+        st.success("All parameters look good")
 
     # ---------- FEATURE IMPORTANCE ---------- #
     st.subheader("📊 Feature Importance")
 
-    features = ["age","sex","cp","trestbps","chol","fbs",
-                "restecg","thalach","exang","oldpeak",
-                "slope","ca","thal"]
+    features=["age","sex","cp","trestbps","chol","fbs",
+              "restecg","thalach","exang","oldpeak",
+              "slope","ca","thal"]
 
-    importance = model.feature_importances_
-
-    fig, ax = plt.subplots()
-    ax.barh(features, importance)
-    ax.set_title("Feature Importance")
-
+    fig,ax=plt.subplots()
+    ax.barh(features,model.feature_importances_)
     st.pyplot(fig)
 
     # ---------- PDF REPORT ---------- #
     st.subheader("📄 Download Report")
 
     def create_pdf():
-        doc = SimpleDocTemplate("report.pdf")
-        styles = getSampleStyleSheet()
-        content = []
+        doc=SimpleDocTemplate("report.pdf")
+        styles=getSampleStyleSheet()
+        content=[]
 
-        content.append(Paragraph("Heart Disease Report", styles["Title"]))
+        content.append(Paragraph("HEART DISEASE MEDICAL REPORT",styles["Title"]))
         content.append(Spacer(1,10))
 
-        content.append(Paragraph(f"Patient Name: {patient_name}", styles["Normal"]))
-        content.append(Paragraph(f"Risk: {risk:.2f}%", styles["Normal"]))
-        content.append(Paragraph(f"Confidence: {confidence:.2f}%", styles["Normal"]))
-        content.append(Paragraph(f"Category: {category}", styles["Normal"]))
+        content.append(Paragraph(f"Patient Name: {patient_name}",styles["Normal"]))
+        content.append(Paragraph(f"Date: {datetime.now().strftime('%d-%m-%Y')}",styles["Normal"]))
         content.append(Spacer(1,10))
 
-        content.append(Paragraph("Health Suggestions:", styles["Heading2"]))
+        content.append(Paragraph("RESULT:",styles["Heading2"]))
+        content.append(Paragraph(f"Risk: {risk:.2f}%",styles["Normal"]))
+        content.append(Paragraph(f"Confidence: {confidence:.2f}%",styles["Normal"]))
+        content.append(Paragraph(f"Category: {category}",styles["Normal"]))
+        content.append(Spacer(1,10))
+
+        content.append(Paragraph("PATIENT PARAMETERS:",styles["Heading2"]))
+        content.append(Paragraph(f"Age: {age}",styles["Normal"]))
+        content.append(Paragraph(f"Sex: {'Male' if sex==1 else 'Female'}",styles["Normal"]))
+        content.append(Paragraph(f"Chest Pain: {cp_labels[cp]}",styles["Normal"]))
+        content.append(Paragraph(f"BP: {trestbps}",styles["Normal"]))
+        content.append(Paragraph(f"Cholesterol: {chol}",styles["Normal"]))
+        content.append(Paragraph(f"Heart Rate: {thalach}",styles["Normal"]))
+        content.append(Paragraph(f"Oldpeak: {oldpeak}",styles["Normal"]))
+        content.append(Paragraph(f"CA: {ca}",styles["Normal"]))
+        content.append(Spacer(1,10))
+
+        content.append(Paragraph("SUGGESTIONS:",styles["Heading2"]))
         for s in suggestions:
-            content.append(Paragraph(f"- {s}", styles["Normal"]))
+            content.append(Paragraph(f"- {s}",styles["Normal"]))
+
+        content.append(Spacer(1,20))
+        content.append(Paragraph("Developed by Sanchit Sharan",styles["Normal"]))
 
         doc.build(content)
 
     create_pdf()
 
-    with open("report.pdf", "rb") as f:
-        st.download_button("⬇️ Download Full Report", f, file_name="Heart_Report.pdf")
+    with open("report.pdf","rb") as f:
+        st.download_button("⬇️ Download Full Report",f,file_name="Heart_Report.pdf")
