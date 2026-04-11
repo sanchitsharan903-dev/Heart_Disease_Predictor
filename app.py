@@ -94,60 +94,9 @@ if st.button("Predict"):
     st.subheader(f"🧠 Risk: {risk:.2f}%")
     st.write(f"Confidence: {confidence:.2f}%")
 
-    st.progress(float(risk)/100)
-    # ---------- PDF REPORT ---------- #
-st.subheader("📄 Download Report")
+    st.progress(risk/100)
 
-def create_pdf():
-    doc = SimpleDocTemplate("report.pdf")
-    styles = getSampleStyleSheet()
-
-    content = []
-
-    content.append(Paragraph("Heart Disease Report", styles["Title"]))
-    content.append(Spacer(1, 10))
-
-    content.append(Paragraph(f"Risk: {risk:.2f}%", styles["Normal"]))
-    content.append(Paragraph(f"Confidence: {confidence:.2f}%", styles["Normal"]))
-    content.append(Spacer(1, 10))
-
-    content.append(Paragraph("Patient Data:", styles["Heading2"]))
-    content.append(Paragraph(f"Age: {age}", styles["Normal"]))
-    content.append(Paragraph(f"Cholesterol: {chol}", styles["Normal"]))
-    content.append(Paragraph(f"Blood Pressure: {trestbps}", styles["Normal"]))
-    content.append(Paragraph(f"Heart Rate: {thalach}", styles["Normal"]))
-    content.append(Spacer(1, 10))
-
-    if risk > 60:
-        content.append(Paragraph("⚠️ High Risk - Consult Doctor", styles["Normal"]))
-    else:
-        content.append(Paragraph("✅ Moderate/Low Risk", styles["Normal"]))
-
-    doc.build(content)
-
-create_pdf()
-
-with open("report.pdf", "rb") as f:
-    st.download_button(
-        "⬇️ Download Report",
-        f,
-        file_name="Heart_Report.pdf"
-    )
-    # ---------- RISK BREAKDOWN ---------- #
-st.subheader("📊 Risk Breakdown")
-
-risk_factors = {
-    "Cholesterol": chol / 400,
-    "Blood Pressure": trestbps / 200,
-    "Heart Rate": 1 - (thalach / 220),
-    "Oldpeak": oldpeak / 6,
-    "Blocked Vessels (ca)": ca / 3
-}
-
-risk_df = pd.DataFrame(list(risk_factors.items()), columns=["Factor", "Impact"])
-
-st.bar_chart(risk_df.set_index("Factor"))
-
+    # ---------- RISK CATEGORY ---------- #
     if risk < 30:
         st.success("Low Risk 🟢")
     elif risk < 60:
@@ -155,20 +104,27 @@ st.bar_chart(risk_df.set_index("Factor"))
     else:
         st.error("High Risk 🔴")
 
+    # ---------- RISK BREAKDOWN ---------- #
+    st.subheader("📊 Risk Breakdown")
+
+    risk_factors = {
+        "Cholesterol": chol / 400,
+        "Blood Pressure": trestbps / 200,
+        "Heart Rate": 1 - (thalach / 220),
+        "Oldpeak": oldpeak / 6,
+        "Blocked Vessels": ca / 3
+    }
+
+    risk_df = pd.DataFrame(list(risk_factors.items()), columns=["Factor", "Impact"])
+    st.bar_chart(risk_df.set_index("Factor"))
+
     # ---------- COMPARISON GRAPHS ---------- #
     st.subheader("🧪 Health Comparison")
 
-    st.write("### Cholesterol")
-    st.bar_chart(pd.DataFrame({"Value":[chol,200]}, index=["You","Normal"]))
-
-    st.write("### Blood Pressure")
-    st.bar_chart(pd.DataFrame({"Value":[trestbps,120]}, index=["You","Normal"]))
-
-    st.write("### Heart Rate")
-    st.bar_chart(pd.DataFrame({"Value":[thalach,100]}, index=["You","Normal"]))
-
-    st.write("### Oldpeak")
-    st.bar_chart(pd.DataFrame({"Value":[oldpeak,1]}, index=["You","Normal"]))
+    st.bar_chart(pd.DataFrame({"Value":[chol,200]}, index=["You","Normal Chol"]))
+    st.bar_chart(pd.DataFrame({"Value":[trestbps,120]}, index=["You","Normal BP"]))
+    st.bar_chart(pd.DataFrame({"Value":[thalach,100]}, index=["You","Normal HR"]))
+    st.bar_chart(pd.DataFrame({"Value":[oldpeak,1]}, index=["You","Normal Oldpeak"]))
 
     # ---------- HEALTH SUGGESTIONS ---------- #
     st.subheader("💡 Health Suggestions")
@@ -212,7 +168,26 @@ st.bar_chart(risk_df.set_index("Factor"))
         suggestion_flag = True
 
     if not suggestion_flag:
-        st.success("All parameters look good ✅ Maintain healthy lifestyle")
+        st.success("All parameters look good ✅")
+
+    # ---------- PDF REPORT ---------- #
+    st.subheader("📄 Download Report")
+
+    def create_pdf():
+        doc = SimpleDocTemplate("report.pdf")
+        styles = getSampleStyleSheet()
+
+        content = []
+        content.append(Paragraph("Heart Disease Report", styles["Title"]))
+        content.append(Paragraph(f"Risk: {risk:.2f}%", styles["Normal"]))
+        content.append(Paragraph(f"Confidence: {confidence:.2f}%", styles["Normal"]))
+
+        doc.build(content)
+
+    create_pdf()
+
+    with open("report.pdf", "rb") as f:
+        st.download_button("⬇️ Download Report", f, file_name="Heart_Report.pdf")
 
     # ---------- HISTORY ---------- #
     if "history" not in st.session_state:
@@ -236,6 +211,6 @@ st.bar_chart(risk_df.set_index("Factor"))
 
     # ---------- FOOTER ---------- #
     st.markdown("""
-<hr style="margin-top: 50px;">
-<p style='text-align:center;'>Developed by <b>Sanchit Sharan</b></p>
-""", unsafe_allow_html=True)
+    <hr>
+    <p style='text-align:center;'>Developed by <b>Sanchit Sharan</b></p>
+    """, unsafe_allow_html=True)
