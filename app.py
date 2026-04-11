@@ -178,6 +178,21 @@ if st.button("Predict"):
         st.success("All parameters look good ✅")
         suggestions.append("All parameters normal")
 
+    # ---------- FEATURE IMPORTANCE ---------- #
+    st.subheader("📊 Feature Importance")
+
+    features = ["age","sex","cp","trestbps","chol","fbs",
+                "restecg","thalach","exang","oldpeak",
+                "slope","ca","thal"]
+
+    importance = model.feature_importances_
+
+    fig, ax = plt.subplots()
+    ax.barh(features, importance)
+    ax.set_title("Feature Importance")
+
+    st.pyplot(fig)
+
     # ---------- PDF REPORT ---------- #
     st.subheader("📄 Download Report")
 
