@@ -23,7 +23,6 @@ st.markdown(f"""
     background-size: cover;
     background-position: center;
 }}
-
 .block-container {{
     background: rgba(0, 0, 0, 0.35);
     padding: 2rem;
@@ -38,8 +37,6 @@ scaler = pickle.load(open("scaler.pkl", "rb"))
 
 # ---------- TITLE ---------- #
 st.title("❤️ Heart Disease Predictor (AI Powered)")
-
-# ---------- PATIENT NAME ---------- #
 patient_name = st.text_input("👤 Patient Name")
 
 # ---------- INPUT ---------- #
@@ -104,7 +101,6 @@ if st.button("Predict"):
     st.write(f"Confidence: {confidence:.2f}%")
     st.progress(risk/100)
 
-    # ---------- RISK CATEGORY ---------- #
     if risk < 30:
         category = "LOW"
         st.success("Low Risk 🟢")
@@ -114,6 +110,28 @@ if st.button("Predict"):
     else:
         category = "HIGH"
         st.error("High Risk 🔴")
+
+    # ---------- RISK BREAKDOWN ---------- #
+    st.subheader("📊 Risk Breakdown")
+
+    risk_factors = {
+        "Cholesterol": chol / 400,
+        "Blood Pressure": trestbps / 200,
+        "Heart Rate": 1 - (thalach / 220),
+        "Oldpeak": oldpeak / 6,
+        "Blocked Vessels": ca / 3
+    }
+
+    risk_df = pd.DataFrame(list(risk_factors.items()), columns=["Factor", "Impact"])
+    st.bar_chart(risk_df.set_index("Factor"))
+
+    # ---------- COMPARISON GRAPHS ---------- #
+    st.subheader("🧪 Health Comparison")
+
+    st.bar_chart(pd.DataFrame({"Value":[chol,200]}, index=["You","Normal Chol"]))
+    st.bar_chart(pd.DataFrame({"Value":[trestbps,120]}, index=["You","Normal BP"]))
+    st.bar_chart(pd.DataFrame({"Value":[thalach,100]}, index=["You","Normal HR"]))
+    st.bar_chart(pd.DataFrame({"Value":[oldpeak,1]}, index=["You","Normal Oldpeak"]))
 
     # ---------- HEALTH SUGGESTIONS ---------- #
     st.subheader("💡 Health Suggestions")
@@ -180,9 +198,6 @@ if st.button("Predict"):
         content.append(Paragraph("Health Suggestions:", styles["Heading2"]))
         for s in suggestions:
             content.append(Paragraph(f"- {s}", styles["Normal"]))
-
-        content.append(Spacer(1,20))
-        content.append(Paragraph("Developed by Sanchit Sharan", styles["Normal"]))
 
         doc.build(content)
 
