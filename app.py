@@ -37,7 +37,7 @@ model = pickle.load(open("model.pkl", "rb"))
 scaler = pickle.load(open("scaler.pkl", "rb"))
 
 # ---------- TITLE ---------- #
-st.title("❤️ Heart Disease Predictor (Based on Machine Learning)")
+st.title("❤️ Heart Disease Predictor (AI Powered)")
 
 # ---------- INPUT ---------- #
 age = st.number_input("Age", 1, 120, 30)
@@ -93,15 +93,17 @@ if st.button("Predict"):
     # ---------- RESULT ---------- #
     st.subheader(f"🧠 Risk: {risk:.2f}%")
     st.write(f"Confidence: {confidence:.2f}%")
-
     st.progress(risk/100)
 
     # ---------- RISK CATEGORY ---------- #
     if risk < 30:
+        category = "LOW"
         st.success("Low Risk 🟢")
     elif risk < 60:
+        category = "MODERATE"
         st.warning("Moderate Risk 🟡")
     else:
+        category = "HIGH"
         st.error("High Risk 🔴")
 
     # ---------- RISK BREAKDOWN ---------- #
@@ -118,7 +120,7 @@ if st.button("Predict"):
     risk_df = pd.DataFrame(list(risk_factors.items()), columns=["Factor", "Impact"])
     st.bar_chart(risk_df.set_index("Factor"))
 
-    # ---------- COMPARISON GRAPHS ---------- #
+    # ---------- HEALTH COMPARISON ---------- #
     st.subheader("🧪 Health Comparison")
 
     st.bar_chart(pd.DataFrame({"Value":[chol,200]}, index=["You","Normal Chol"]))
@@ -129,46 +131,47 @@ if st.button("Predict"):
     # ---------- HEALTH SUGGESTIONS ---------- #
     st.subheader("💡 Health Suggestions")
 
-    suggestion_flag = False
+    suggestions = []
 
     if chol > 240:
         st.warning("High cholesterol → reduce oily food")
-        suggestion_flag = True
+        suggestions.append("Reduce oily and fatty food")
 
     if trestbps > 140:
         st.warning("High BP → reduce salt")
-        suggestion_flag = True
+        suggestions.append("Reduce salt intake")
 
     if thalach < 100:
         st.warning("Low heart rate → improve fitness")
-        suggestion_flag = True
+        suggestions.append("Improve cardiovascular fitness")
 
     if oldpeak > 2:
         st.warning("Heart stress detected")
-        suggestion_flag = True
+        suggestions.append("Possible heart stress")
 
     if cp == 3:
         st.warning("Asymptomatic chest pain → serious risk")
-        suggestion_flag = True
+        suggestions.append("Chest pain risk detected")
 
     if exang == 1:
         st.warning("Exercise angina detected")
-        suggestion_flag = True
+        suggestions.append("Exercise-induced angina")
 
     if ca > 1:
         st.warning("Blocked vessels detected")
-        suggestion_flag = True
+        suggestions.append("Blocked vessels")
 
     if thal != 0:
         st.warning("Abnormal thal result")
-        suggestion_flag = True
+        suggestions.append("Abnormal thalassemia")
 
     if risk > 60:
         st.error("Consult cardiologist immediately 🚨")
-        suggestion_flag = True
+        suggestions.append("Consult cardiologist immediately")
 
-    if not suggestion_flag:
+    if len(suggestions) == 0:
         st.success("All parameters look good ✅")
+        suggestions.append("All parameters normal")
 
     # ---------- PDF REPORT ---------- #
     st.subheader("📄 Download Report")
@@ -176,18 +179,38 @@ if st.button("Predict"):
     def create_pdf():
         doc = SimpleDocTemplate("report.pdf")
         styles = getSampleStyleSheet()
-
         content = []
+
         content.append(Paragraph("Heart Disease Report", styles["Title"]))
+        content.append(Spacer(1,10))
+
         content.append(Paragraph(f"Risk: {risk:.2f}%", styles["Normal"]))
         content.append(Paragraph(f"Confidence: {confidence:.2f}%", styles["Normal"]))
+        content.append(Paragraph(f"Category: {category}", styles["Normal"]))
+        content.append(Spacer(1,10))
+
+        content.append(Paragraph("Patient Data:", styles["Heading2"]))
+        content.append(Paragraph(f"Age: {age}", styles["Normal"]))
+        content.append(Paragraph(f"Sex: {'Male' if sex==1 else 'Female'}", styles["Normal"]))
+        content.append(Paragraph(f"Cholesterol: {chol}", styles["Normal"]))
+        content.append(Paragraph(f"Blood Pressure: {trestbps}", styles["Normal"]))
+        content.append(Paragraph(f"Heart Rate: {thalach}", styles["Normal"]))
+        content.append(Paragraph(f"Oldpeak: {oldpeak}", styles["Normal"]))
+        content.append(Spacer(1,10))
+
+        content.append(Paragraph("Health Suggestions:", styles["Heading2"]))
+        for s in suggestions:
+            content.append(Paragraph(f"- {s}", styles["Normal"]))
+
+        content.append(Spacer(1,20))
+        content.append(Paragraph("Developed by Sanchit Sharan", styles["Normal"]))
 
         doc.build(content)
 
     create_pdf()
 
     with open("report.pdf", "rb") as f:
-        st.download_button("⬇️ Download Report", f, file_name="Heart_Report.pdf")
+        st.download_button("⬇️ Download Full Report", f, file_name="Heart_Report.pdf")
 
     # ---------- HISTORY ---------- #
     if "history" not in st.session_state:
@@ -210,7 +233,4 @@ if st.button("Predict"):
     st.pyplot(fig)
 
     # ---------- FOOTER ---------- #
-    st.markdown("""
-    <hr>
-    <p style='text-align:center;'>Developed by <b>Sanchit Sharan</b></p>
-    """, unsafe_allow_html=True)
+    st.markdown("<hr><p style='text-align:center;'>Developed by <b>Sanchit Sharan</b></p>", unsafe_allow_html=True)
