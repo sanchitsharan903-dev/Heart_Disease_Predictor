@@ -145,6 +145,7 @@ if st.button("Predict"):
 
     st.subheader(f"🧠 Risk: {risk:.2f}%")
     st.write(f"Model Confidence: {confidence:.2f}%")
+    
 
     # risk bar
     st.progress(risk/100)
@@ -156,6 +157,23 @@ if st.button("Predict"):
         st.warning("Moderate Risk 🟡")
     else:
         st.error("High Risk 🔴")
+
+    # ---------------- USER INPUT GRAPH ---------------- #
+    import pandas as pd
+
+    st.subheader("📈 Your Health Data")
+
+    input_data_dict = {
+        "Age": age,
+        "BP": trestbps,
+        "Cholesterol": chol,
+        "Max HR": thalach,
+        "Oldpeak": oldpeak
+    }
+
+df_input = pd.DataFrame.from_dict(input_data_dict, orient='index', columns=['Value'])
+
+st.bar_chart(df_input)
 
     # -------- HEALTH INSIGHTS -------- #
 
