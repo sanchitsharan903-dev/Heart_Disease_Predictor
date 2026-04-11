@@ -35,7 +35,7 @@ model = pickle.load(open("model.pkl", "rb"))
 scaler = pickle.load(open("scaler.pkl", "rb"))
 
 # ---------- TITLE ---------- #
-st.title("❤️ Heart Disease Predictor (Advanced AI System)")
+st.title("❤️ Heart Disease Predictor (Based on Machine Learning)")
 
 # ---------- INPUT ---------- #
 age = st.number_input("Age", 1, 120, 30)
