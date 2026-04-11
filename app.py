@@ -20,35 +20,12 @@ st.markdown(f"""
         url("data:image/png;base64,{img_base64}");
     background-size: cover;
     background-position: center;
-    background-repeat: no-repeat;
-}}
-
-[data-testid="stSidebar"] {{
-    background: rgba(10, 15, 25, 0.9);
 }}
 
 .block-container {{
     background: rgba(0, 0, 0, 0.35);
     padding: 2rem;
     border-radius: 15px;
-    backdrop-filter: blur(6px);
-}}
-
-h1, h2, h3, p, label {{
-    color: #f1f5f9 !important;
-}}
-
-.stButton > button {{
-    background: linear-gradient(90deg, #00c6ff, #0072ff);
-    color: white;
-    border-radius: 10px;
-    font-weight: bold;
-}}
-
-.stNumberInput input, .stSelectbox div {{
-    background-color: rgba(0,0,0,0.6) !important;
-    color: white !important;
-    border-radius: 8px;
 }}
 </style>
 """, unsafe_allow_html=True)
@@ -60,62 +37,44 @@ scaler = pickle.load(open("scaler.pkl", "rb"))
 # ---------- TITLE ---------- #
 st.title("❤️ Heart Disease Predictor (Advanced AI System)")
 
-# ---------- INPUT SECTION ---------- #
+# ---------- INPUT ---------- #
 age = st.number_input("Age", 1, 120, 30)
 
-sex_dict = {"Female": 0, "Male": 1}
-sex = sex_dict[st.selectbox("Sex", list(sex_dict.keys()))]
+sex = {"Female": 0, "Male": 1}[st.selectbox("Sex", ["Female","Male"])]
 
-cp_dict = {
-    "Typical Angina": 0,
-    "Atypical Angina": 1,
-    "Non-anginal Pain": 2,
-    "Asymptomatic": 3
-}
-cp = cp_dict[st.selectbox("Chest Pain Type", list(cp_dict.keys()))]
+cp_labels = ["Typical Angina","Atypical Angina","Non-anginal Pain","Asymptomatic"]
+cp = cp_labels.index(st.selectbox("Chest Pain Type", cp_labels))
 
-trestbps = st.number_input("Resting Blood Pressure (mm Hg)", 80, 200, 120)
+trestbps = st.number_input("Resting BP", 80, 200, 120)
+chol = st.number_input("Cholesterol", 100, 400, 200)
 
-chol = st.number_input("Cholesterol (mg/dl)", 100, 400, 200)
-
-# Cholesterol interpretation
 if chol < 200:
-    st.success("Cholesterol: Normal ✅")
+    st.success("Cholesterol Normal ✅")
 elif chol < 240:
-    st.warning("Cholesterol: Borderline ⚠️")
+    st.warning("Borderline ⚠️")
 else:
-    st.error("Cholesterol: High ❌")
+    st.error("High Cholesterol ❌")
 
-fbs_dict = {"No": 0, "Yes": 1}
-fbs = fbs_dict[st.selectbox("Fasting Blood Sugar > 120 mg/dl", list(fbs_dict.keys()))]
+fbs = {"No":0,"Yes":1}[st.selectbox("FBS >120",["No","Yes"])]
 
-restecg_dict = {
-    "Normal": 0,
-    "ST-T Abnormality": 1,
-    "Left Ventricular Hypertrophy": 2
-}
-restecg = restecg_dict[st.selectbox("Rest ECG", list(restecg_dict.keys()))]
+restecg_labels = ["Normal","ST-T abnormality","LVH"]
+restecg = restecg_labels.index(st.selectbox("Rest ECG",restecg_labels))
 
-thalach = st.number_input("Max Heart Rate", 60, 220, 150)
+thalach = st.number_input("Max Heart Rate",60,220,150)
 
-exang_dict = {"No": 0, "Yes": 1}
-exang = exang_dict[st.selectbox("Exercise Induced Angina", list(exang_dict.keys()))]
+exang = {"No":0,"Yes":1}[st.selectbox("Exercise Angina",["No","Yes"])]
 
-oldpeak = st.number_input("Oldpeak (ST depression)", 0.0, 6.0, 1.0)
+oldpeak = st.number_input("Oldpeak",0.0,6.0,1.0)
 
-slope_dict = {"Upsloping": 0, "Flat": 1, "Downsloping": 2}
-slope = slope_dict[st.selectbox("Slope", list(slope_dict.keys()))]
+slope_labels = ["Upsloping","Flat","Downsloping"]
+slope = slope_labels.index(st.selectbox("Slope",slope_labels))
 
-ca = st.selectbox("Number of Major Vessels", [0, 1, 2, 3])
+ca = st.selectbox("Major Vessels",[0,1,2,3])
 
-thal_dict = {
-    "Normal": 0,
-    "Fixed Defect": 1,
-    "Reversible Defect": 2
-}
-thal = thal_dict[st.selectbox("Thalassemia", list(thal_dict.keys()))]
+thal_labels = ["Normal","Fixed Defect","Reversible Defect"]
+thal = thal_labels.index(st.selectbox("Thal",thal_labels))
 
-# ---------- PREDICTION ---------- #
+# ---------- PREDICT ---------- #
 if st.button("Predict"):
 
     input_data = np.array([[age, sex, cp, trestbps, chol, fbs,
@@ -124,7 +83,6 @@ if st.button("Predict"):
 
     input_data = scaler.transform(input_data)
 
-    result = model.predict(input_data)
     prob = model.predict_proba(input_data)
 
     risk = float(prob[0][1]) * 100
@@ -132,9 +90,8 @@ if st.button("Predict"):
 
     # ---------- RESULT ---------- #
     st.subheader(f"🧠 Risk: {risk:.2f}%")
-    st.write(f"Model Confidence: {confidence:.2f}%")
+    st.write(f"Confidence: {confidence:.2f}%")
 
-    # ---------- PROGRESS ---------- #
     st.progress(float(risk)/100)
 
     if risk < 30:
@@ -144,71 +101,70 @@ if st.button("Predict"):
     else:
         st.error("High Risk 🔴")
 
-    # ---------- HEALTH COMPARISON GRAPHS ---------- #
-    st.subheader("🧪 Health Comparison (Your Value vs Normal)")
+    # ---------- COMPARISON GRAPHS ---------- #
+    st.subheader("🧪 Health Comparison")
 
-    # Cholesterol
-    st.write("### 🩸 Cholesterol")
-    chol_df = pd.DataFrame({
-        "Type": ["Your Value", "Normal (<200)"],
-        "Value": [chol, 200]
-    })
-    st.bar_chart(chol_df.set_index("Type"))
+    st.write("### Cholesterol")
+    st.bar_chart(pd.DataFrame({"Value":[chol,200]}, index=["You","Normal"]))
 
-    # Blood Pressure
-    st.write("### 💓 Blood Pressure")
-    bp_df = pd.DataFrame({
-        "Type": ["Your Value", "Normal (~120)"],
-        "Value": [trestbps, 120]
-    })
-    st.bar_chart(bp_df.set_index("Type"))
+    st.write("### Blood Pressure")
+    st.bar_chart(pd.DataFrame({"Value":[trestbps,120]}, index=["You","Normal"]))
 
-    # Heart Rate
-    st.write("### ❤️ Max Heart Rate")
-    hr_df = pd.DataFrame({
-        "Type": ["Your Value", "Normal (>100)"],
-        "Value": [thalach, 100]
-    })
-    st.bar_chart(hr_df.set_index("Type"))
+    st.write("### Heart Rate")
+    st.bar_chart(pd.DataFrame({"Value":[thalach,100]}, index=["You","Normal"]))
 
-    # Oldpeak
-    st.write("### 📉 ST Depression (Oldpeak)")
-    oldpeak_df = pd.DataFrame({
-        "Type": ["Your Value", "Normal (<1)"],
-        "Value": [oldpeak, 1.0]
-    })
-    st.bar_chart(oldpeak_df.set_index("Type"))
+    st.write("### Oldpeak")
+    st.bar_chart(pd.DataFrame({"Value":[oldpeak,1]}, index=["You","Normal"]))
 
-    # ---------- HEALTH INSIGHTS ---------- #
-    st.subheader("📋 Health Insights")
-
-    if trestbps > 140:
-        st.warning("High Blood Pressure ⚠️")
-    else:
-        st.success("Blood Pressure Normal ✅")
-
-    if thalach < 100:
-        st.warning("Low Heart Rate ⚠️")
-    else:
-        st.success("Heart Rate Normal ✅")
-
-    # ---------- SUGGESTIONS ---------- #
+    # ---------- HEALTH SUGGESTIONS ---------- #
     st.subheader("💡 Health Suggestions")
 
+    suggestion_flag = False
+
     if chol > 240:
-        st.write("➡️ Reduce oily food & exercise regularly")
+        st.warning("High cholesterol → reduce oily food")
+        suggestion_flag = True
 
     if trestbps > 140:
-        st.write("➡️ Reduce salt intake")
+        st.warning("High BP → reduce salt")
+        suggestion_flag = True
+
+    if thalach < 100:
+        st.warning("Low heart rate → improve fitness")
+        suggestion_flag = True
+
+    if oldpeak > 2:
+        st.warning("Heart stress detected")
+        suggestion_flag = True
+
+    if cp == 3:
+        st.warning("Asymptomatic chest pain → serious risk")
+        suggestion_flag = True
+
+    if exang == 1:
+        st.warning("Exercise angina detected")
+        suggestion_flag = True
+
+    if ca > 1:
+        st.warning("Blocked vessels detected")
+        suggestion_flag = True
+
+    if thal != 0:
+        st.warning("Abnormal thal result")
+        suggestion_flag = True
 
     if risk > 60:
-        st.write("➡️ Consult a cardiologist immediately")
+        st.error("Consult cardiologist immediately 🚨")
+        suggestion_flag = True
+
+    if not suggestion_flag:
+        st.success("All parameters look good ✅ Maintain healthy lifestyle")
 
     # ---------- HISTORY ---------- #
     if "history" not in st.session_state:
         st.session_state.history = []
 
-    st.session_state.history.append(round(risk, 2))
+    st.session_state.history.append(round(risk,2))
 
     st.subheader("📜 Prediction History")
     st.write(st.session_state.history)
@@ -216,25 +172,16 @@ if st.button("Predict"):
     # ---------- FEATURE IMPORTANCE ---------- #
     st.subheader("📊 Feature Importance")
 
-    features = [
-        "age","sex","cp","trestbps","chol","fbs",
-        "restecg","thalach","exang","oldpeak",
-        "slope","ca","thal"
-    ]
+    features = ["age","sex","cp","trestbps","chol","fbs",
+                "restecg","thalach","exang","oldpeak",
+                "slope","ca","thal"]
 
-    importance = model.feature_importances_
-
-    fig, ax = plt.subplots(figsize=(8,6))
-    ax.barh(features, importance)
-    ax.set_title("Feature Importance")
-
+    fig, ax = plt.subplots()
+    ax.barh(features, model.feature_importances_)
     st.pyplot(fig)
 
     # ---------- FOOTER ---------- #
     st.markdown("""
-<hr style="margin-top: 50px; border: 1px solid rgba(255,255,255,0.2);">
-
-<p style='text-align: center; font-size: 14px; color: #94a3b8;'>
-🚀 Built with Machine Learning | Developed by <b style="color:#00c6ff;">Sanchit Sharan</b>
-</p>
+<hr style="margin-top: 50px;">
+<p style='text-align:center;'>Developed by <b>Sanchit Sharan</b></p>
 """, unsafe_allow_html=True)
